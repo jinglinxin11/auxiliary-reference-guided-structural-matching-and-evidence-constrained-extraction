@@ -1,8 +1,12 @@
-# 参考辅助的层间干扰抑制
+# 辅助参考引导的激光写入光致变色图案结构匹配与证据约束提取
+
+英文标题：Auxiliary-reference-guided structural matching and evidence-constrained extraction of laser-written photochromic patterns
+
+仓库：[源代码](https://github.com/jinglinxin11/auxiliary-reference-guided-structural-matching-and-evidence-constrained-extraction)。
 
 ## 1. 项目用途
 
-本项目实现 Reference-Assisted Interlayer Interference Suppression（参考辅助的层间干扰抑制）方法，将四张目标显微图像分别与四张辅助结构图像进行独立匹配，自动估计辅助结构到目标图的尺度、旋转和平移，并输出识别字母、自然背景结果图和仅保留匹配证据的二值图。
+本项目实现辅助参考引导的激光写入光致变色图案结构匹配与证据约束提取，将四张目标显微图像分别与四张辅助结构图像进行独立匹配，自动估计辅助结构到目标图的尺度、旋转和平移，并输出选中的参考标签、自然背景结果图和仅保留匹配证据的二值图。
 
 当前输入对应字母为 `S`、`T`、`U` 和 `Z`。匹配采用单张独立排名，不使用一对一批次分配。
 

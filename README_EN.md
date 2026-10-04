@@ -1,8 +1,10 @@
-# Reference-Assisted Interlayer Interference Suppression
+# Auxiliary-reference-guided structural matching and evidence-constrained extraction of laser-written photochromic patterns
+
+Repository: [Source code](https://github.com/jinglinxin11/auxiliary-reference-guided-structural-matching-and-evidence-constrained-extraction).
 
 ## 1. Purpose
 
-This project implements Reference-Assisted Interlayer Interference Suppression by independently matching four target microscopy images against four structural reference images. It estimates the scale, rotation, and translation that map each reference structure onto a target, then exports the selected label, a natural-background presentation image, and a matched-only binary evidence image.
+This project implements auxiliary-reference-guided structural matching and evidence-constrained extraction of laser-written photochromic patterns by independently matching four target microscopy images against four structural reference images. It estimates the scale, rotation, and translation that map each reference structure onto a target, then exports the selected label, a natural-background presentation image, and a matched-only binary evidence image.
 
 The current candidate labels are `S`, `T`, `U`, and `Z`. Each target is ranked independently; no one-to-one batch assignment is used.
 
