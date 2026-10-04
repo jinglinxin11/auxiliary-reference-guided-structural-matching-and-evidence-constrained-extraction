@@ -10,7 +10,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import cv2
@@ -19,7 +19,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from microscopy_matching.image_processing import Structure, corridor_from_points
-from microscopy_matching.pipeline import PipelineRun, TARGET_REFERENCED_SEARCH
+from microscopy_matching.pipeline import PipelineRun
 from microscopy_matching.registration import (
     UnifiedMatch,
     refine_candidate,
@@ -162,19 +162,14 @@ def build_paper_diagnostics(run: PipelineRun) -> PaperDiagnostics:
     representative = 0
 
     representative_match = run.matches[representative][selected[representative]]
-    prior_confidence = float(
-        min(
-            run.target_calibrations[representative].confidence,
-            run.reference_calibrations[selected[representative]].confidence,
-        )
-    )
     landscape = translation_score_landscape(
         run.target_structures[representative],
         run.reference_structures[selected[representative]],
         representative_match,
         TRANSLATION_OFFSETS,
         TRANSLATION_OFFSETS,
-        physical_prior_confidence=prior_confidence,
+        physical_prior_confidence=0.0,
+        config=run.search_config,
     )
     radius_by_target = tuple(
         corridor_radius_metrics(
@@ -196,27 +191,21 @@ def build_paper_diagnostics(run: PipelineRun) -> PaperDiagnostics:
     )
 
     # Recreate the original target_03 scale-bound sensitivity panel by actually
-    # rerunning the current physical-scale-constrained search at each bound.
+    # rerunning the free generic-scale search at each bound.
     sensitivity_target = 2
     search_scores = np.empty((len(SEARCH_BOUND_VALUES), 4), dtype=np.float64)
     for bound_index, upper_bound in enumerate(SEARCH_BOUND_VALUES):
         config = replace(
-            TARGET_REFERENCED_SEARCH,
-            physical_residual_scale_range=(0.60, float(upper_bound)),
+            run.search_config,
+            generic_scale_max=float(upper_bound),
         )
         for candidate_index in range(4):
             base_match = run.matches[sensitivity_target][candidate_index]
-            confidence = float(
-                min(
-                    run.target_calibrations[sensitivity_target].confidence,
-                    run.reference_calibrations[candidate_index].confidence,
-                )
-            )
             rerun = refine_candidate(
                 run.target_structures[sensitivity_target],
                 run.reference_structures[candidate_index],
-                physical_scale_prior=base_match.physical_scale_prior,
-                physical_prior_confidence=confidence,
+                physical_scale_prior=None,
+                physical_prior_confidence=0.0,
                 physical_scale_available=base_match.physical_scale_available,
                 config=config,
             )
@@ -474,7 +463,7 @@ def target_referenced_reference_rgb(
         source = _remove_detected_scale_annotation(
             source,
             context.run.reference_images[candidate_index].shape[:2],
-            calibration.bar_bbox_xyxy,
+            calibration.annotation_bbox_xyxy or calibration.bar_bbox_xyxy,
         )
         interpolation = cv2.INTER_LANCZOS4
     elif representation == "analysis":
@@ -608,11 +597,14 @@ def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Pat
     bound_path = outdir / "search_bound_sensitivity.csv"
     with bound_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(("physical_residual_scale_upper_bound", *context.reference_labels))
+        writer.writerow(("generic_scale_upper_bound", *context.reference_labels))
         for bound, scores in zip(context.search_bound_values, context.search_bound_scores):
             writer.writerow((float(bound), *scores.tolist()))
 
     manifest = {
+        "matching_mode": "automatic_independent_free_matching",
+        "search_config": asdict(context.run.search_config),
+        "calibration_role": "reporting and display only; not used in registration or ranking",
         "physical_scale_convention": {
             "target_native_scale_bar_um": TARGET_DISPLAY_SCALE_BAR_UM,
             "reference_native_scale_bar_um": 500.0,
@@ -631,6 +623,10 @@ def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Pat
                     "pixels_per_um": calibration.pixels_per_um,
                     "confidence": calibration.confidence,
                     "source": calibration.source,
+                    "scale_bar_length_um": calibration.scale_bar_length_um,
+                    "scale_bar_pixels": calibration.scale_bar_pixels,
+                    "bar_bbox_xyxy": calibration.bar_bbox_xyxy,
+                    "annotation_bbox_xyxy": calibration.annotation_bbox_xyxy,
                 }
                 for path, calibration in zip(
                     context.run.target_paths,
@@ -643,6 +639,10 @@ def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Pat
                     "pixels_per_um": calibration.pixels_per_um,
                     "confidence": calibration.confidence,
                     "source": calibration.source,
+                    "scale_bar_length_um": calibration.scale_bar_length_um,
+                    "scale_bar_pixels": calibration.scale_bar_pixels,
+                    "bar_bbox_xyxy": calibration.bar_bbox_xyxy,
+                    "annotation_bbox_xyxy": calibration.annotation_bbox_xyxy,
                 }
                 for path, calibration in zip(
                     context.run.reference_paths,
@@ -678,7 +678,7 @@ def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Pat
         },
         "search_bound_sensitivity": {
             "target": context.target_labels[2],
-            "definition": "current registration rerun with physical residual scale upper bound varied",
+            "definition": "free registration rerun with generic coarse-scale upper bound varied; seven grid points retained",
             "upper_bounds": context.search_bound_values.tolist(),
             "scores": context.search_bound_scores.tolist(),
         },

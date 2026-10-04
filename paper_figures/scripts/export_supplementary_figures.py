@@ -622,7 +622,7 @@ def component_panel(ax: plt.Axes, context: PaperDiagnostics, target_index: int, 
 def bound_panel(ax: plt.Axes, context: PaperDiagnostics, *, compact: bool = False) -> None:
     for candidate_index,label in enumerate(context.reference_labels):
         ax.plot(context.search_bound_values,context.search_bound_scores[:,candidate_index],color=REFERENCE_COLORS[candidate_index],marker="o",markersize=3.4,lw=1.0,label=label)
-    ax.set_xlim(1.585,1.915); ax.set_xticks(context.search_bound_values); ax.set_xlabel("Scale upper bound" if compact else "Diagnostic scale upper bound"); ax.set_ylabel("Score, F" if compact else "Internal score, F")
+    ax.set_xlim(1.585,1.915); ax.set_xticks(context.search_bound_values); ax.set_xlabel("Generic scale upper bound"); ax.set_ylabel("Score, F" if compact else "Internal score, F")
     ax.set_title("target_03 bound sensitivity" if compact else "target_03 search-bound expansion (separate sensitivity run)",pad=4,fontsize=5.8 if compact else 7.2); ax.grid(color=GRID,lw=0.55)
     winners=np.argmax(context.search_bound_scores,axis=1)
     if np.all(winners==winners[0]):

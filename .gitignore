@@ -4,6 +4,8 @@ __pycache__/
 .venv/
 .venv-figures/
 .venv-paper/
+.review-venv/
+review_results/
 .DS_Store
 artifacts/
 output/

@@ -50,8 +50,9 @@ display labels. Candidate selection is determined by the algorithm scores.
 
 - Target inputs carry validated native 200 µm scale bars.
 - Reference inputs carry validated native 500 µm scale bars.
-- Both native calibrations are used in the physical scale prior during
-  registration; treating the reference bar as 200 µm is incorrect.
+- Native calibrations are reporting/display metadata only. They do not enter
+  free registration, search bounds or ranking; treating the reference bar as
+  200 µm is still incorrect when reporting physical measurements.
 - Every manuscript microscopy output is expressed at target-referenced
   sampling. Supplementary Figure 4 therefore removes the detected native
   reference annotation, isotropically resamples the full reference field from
@@ -65,6 +66,12 @@ display labels. Candidate selection is determined by the algorithm scores.
   input hashes, and the text definition of this conversion.
 
 ## End-to-end data flow
+
+The corrected calibration uses a white label panel only to locate its black
+horizontal bar; label-panel width is not a calibration measurement. Diagnostics
+record both the bar and annotation bounds. The corrected native transform uses
+each image's own analysis dimensions, and subpixel axial directions use
+double-angle interpolation. These changes do not introduce human-review logic.
 
 ```text
 data/input/target_images + data/input/reference_images
@@ -145,6 +152,16 @@ requested spacing. The supplementary single-panel counts are:
   twice the intersection divided by the sum of target-foreground and corridor
   pixels.
 - The default displayed corridor radius is 12 analysis pixels.
+- Supplementary Figure 5-g reruns target_03 with generic coarse-scale upper
+  bounds 1.60, 1.75 and 1.90, retaining seven grid points and all other settings.
+  These are absolute analysis-scale bounds, not physical residual-scale bounds.
+  Changing the endpoint also changes the interior grid spacing; the diagnostic
+  assesses the complete coarse-grid setting, not only its endpoint.
+
+The free-search grid is 0.70--1.60 (seven points), with +/-14% local scale
+refinement. The physical-prior weight is zero. Each landscape uses the same
+search/scoring configuration as its PipelineRun. R, Q and D are mask/corridor
+retention, density and overlap, not ground-truth recognition/segmentation metrics.
 
 Every plotted numeric value is also written under `generated/diagnostics/`.
 

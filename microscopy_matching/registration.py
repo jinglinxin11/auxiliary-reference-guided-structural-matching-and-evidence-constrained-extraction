@@ -137,7 +137,7 @@ def select_central_auxiliary_support(
     dilation joins neighbouring stroke fragments only to choose a group; the
     returned mask contains strictly original observed pixels and therefore
     cannot fabricate template evidence.  This is applied to auxiliary images
-    only, before their physical extent is used in a scale-constrained search.
+    only, before their observed support is used in pairwise registration.
     """
 
     mask = np.asarray(structure.mask, dtype=bool)
@@ -269,7 +269,10 @@ def native_affine(
     analysis_matrix = similarity_matrix(
         auxiliary.bbox, match.scale, match.angle_deg, match.dx, match.dy
     ).astype(np.float64)
-    source_to_analysis = np.diag([analysis_width / source_width, analysis_height / source_height, 1.0])
+    source_analysis_height, source_analysis_width = auxiliary.image.shape[:2]
+    source_to_analysis = np.diag(
+        [source_analysis_width / source_width, source_analysis_height / source_height, 1.0]
+    )
     analysis_to_target = np.diag([target_width / analysis_width, target_height / analysis_height, 1.0])
     homogeneous = np.eye(3, dtype=np.float64)
     homogeneous[:2, :] = analysis_matrix
@@ -321,10 +324,11 @@ def refine_candidate(
     target_distance = cv2.distanceTransform((~target.mask).astype(np.uint8), cv2.DIST_L2, 3)
     auxiliary_distance = cv2.distanceTransform((~auxiliary.mask).astype(np.uint8), cv2.DIST_L2, 3)
     target_angle, target_coherence = orientation_fields(target_soft)
+    target_angle = (np.cos(2.0 * target_angle), np.sin(2.0 * target_angle))
     auxiliary_angle, _ = orientation_fields(auxiliary.skeleton.astype(np.float32))
     source_points = _skeleton_points(auxiliary, maximum=640)
     target_points = _skeleton_points(target, maximum=720)
-    source_angles = _bilinear_sample(auxiliary_angle, source_points)
+    source_angles = _sample_axial_angles(auxiliary_angle, source_points)
 
     scales = _coarse_scales(physical_scale_prior, physical_prior_confidence, config)
     seeds: list[tuple[float, float, float, float, float, _Geometry]] = []
@@ -586,10 +590,11 @@ def translation_score_landscape(
     target_distance = cv2.distanceTransform((~target.mask).astype(np.uint8), cv2.DIST_L2, 3)
     auxiliary_distance = cv2.distanceTransform((~auxiliary.mask).astype(np.uint8), cv2.DIST_L2, 3)
     target_angle, target_coherence = orientation_fields(target_soft)
+    target_angle = (np.cos(2.0 * target_angle), np.sin(2.0 * target_angle))
     auxiliary_angle, _ = orientation_fields(auxiliary.skeleton.astype(np.float32))
     source_points = _skeleton_points(auxiliary, maximum=640)
     target_points = _skeleton_points(target, maximum=720)
-    source_angles = _bilinear_sample(auxiliary_angle, source_points)
+    source_angles = _sample_axial_angles(auxiliary_angle, source_points)
 
     landscape = np.empty((len(y_offsets), len(x_offsets)), dtype=np.float64)
     for row, y_offset in enumerate(y_offsets):
@@ -639,6 +644,19 @@ def _bilinear_sample(array: np.ndarray, points_xy: np.ndarray, border: float = 0
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=float(border),
     ).ravel()
+
+
+def _sample_axial_angles(array: np.ndarray, points_xy: np.ndarray) -> np.ndarray:
+    """Interpolate directions modulo pi without averaging across its seam."""
+    return _sample_axial_components(np.cos(2.0 * array), np.sin(2.0 * array), points_xy)
+
+
+def _sample_axial_components(
+    cosine_field: np.ndarray, sine_field: np.ndarray, points_xy: np.ndarray
+) -> np.ndarray:
+    cosine = _bilinear_sample(cosine_field, points_xy)
+    sine = _bilinear_sample(sine_field, points_xy)
+    return np.mod(0.5 * np.arctan2(sine, cosine), np.pi)
 
 
 def _coarse_scales(
@@ -717,7 +735,7 @@ def _geometry_score(
     target_soft: np.ndarray,
     target_distance: np.ndarray,
     auxiliary_distance: np.ndarray,
-    target_angle: np.ndarray,
+    target_angle: tuple[np.ndarray, np.ndarray],
     target_coherence: np.ndarray,
     source_points: np.ndarray,
     target_points: np.ndarray,
@@ -757,7 +775,7 @@ def _geometry_score(
     reverse_distance = _bilinear_sample(auxiliary_distance, inverse[reverse_inside], border=50.0)
     keep = max(1, int(round(0.88 * len(reverse_distance))))
     reverse_similarity = float(np.mean(np.exp(-np.partition(reverse_distance, keep - 1)[:keep] / 4.5)))
-    local_angle = _bilinear_sample(target_angle, active)
+    local_angle = _sample_axial_components(*target_angle, active)
     coherence = _bilinear_sample(target_coherence, active)
     agreement = 0.5 + 0.5 * np.cos(2.0 * (source_angles[inside] + np.deg2rad(angle_deg) - local_angle))
     orientation = float(np.average(agreement, weights=coherence + 0.05))

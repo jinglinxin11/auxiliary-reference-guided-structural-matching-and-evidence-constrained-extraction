@@ -74,8 +74,8 @@ artifacts/matching_results/
 
 1. Extract the dark response, foreground mask, and skeleton from every target and reference image.
 2. Detect the target and reference scale-bar graphics and calibrate them with the explicitly supplied physical lengths of `200 µm` and `500 µm`, respectively. The program does not infer these labels by OCR.
-3. Independently search every candidate reference for each target over scale, rotation, and translation.
-4. Form one score from geometric distance, orientation agreement, skeleton coverage, endpoint coverage, and missing-stroke penalties.
+3. Independently search scale, rotation, and translation without a physical-scale prior. The coarse generic scale grid has seven points from 0.70 to 1.60 and local scale refinement is +/-14%. Calibration is reporting/display metadata only.
+4. Optimize geometry G, evaluate topology T at that transform, and rank by F = 0.72G + 0.28T. F is not a probability and the score matrix is not a statistical confusion matrix. No human-review thresholds or flags are applied.
 5. Select the highest-scoring candidate independently for every target. File order does not force the selected label, and no one-to-one batch assignment is applied.
 6. Export the binary result as `target foreground AND registered reference corridor`.
 

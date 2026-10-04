@@ -1,6 +1,7 @@
 """Auditable physical-scale calibration for microscopy images.
 
-The detector deliberately identifies only a white horizontal scale-bar graphic.
+The detector identifies a white horizontal bar or the black bar inside a white
+annotation panel. A panel's width is never used as the measured bar length.
 It does not OCR the adjacent label or assume a physical length from pixels.  A
 caller must supply the physical bar length (for example, ``500.0`` for a
 validated ``500 um`` label) before a pixels-per-micrometre value is returned.
@@ -20,6 +21,7 @@ CalibrationSource = Literal[
     "explicit_pixels_per_um",
     "explicit_scale_bar_pixels",
     "white_scale_bar",
+    "black_scale_bar_in_label_panel",
     "white_scale_bar_unscaled",
     "failed",
 ]
@@ -44,6 +46,7 @@ class PhysicalScaleEstimate:
     image_shape: tuple[int, int] | None
     bar_bbox_xyxy: tuple[int, int, int, int] | None
     candidates_considered: int
+    annotation_bbox_xyxy: tuple[int, int, int, int] | None = None
 
     @property
     def success(self) -> bool:
@@ -56,6 +59,8 @@ class _BarCandidate:
     width_px: float
     bbox_xyxy: tuple[int, int, int, int]
     confidence: float
+    source: CalibrationSource = "white_scale_bar"
+    annotation_bbox_xyxy: tuple[int, int, int, int] | None = None
 
 
 def estimate_pixels_per_um(
@@ -153,6 +158,7 @@ def estimate_pixels_per_um(
             image_shape=(height, width),
             bar_bbox_xyxy=best.bbox_xyxy,
             candidates_considered=len(candidates),
+            annotation_bbox_xyxy=best.annotation_bbox_xyxy,
         )
 
     if scale_bar_length_um is None:
@@ -166,6 +172,7 @@ def estimate_pixels_per_um(
             image_shape=(height, width),
             bar_bbox_xyxy=best.bbox_xyxy,
             candidates_considered=len(candidates),
+            annotation_bbox_xyxy=best.annotation_bbox_xyxy,
         )
 
     return PhysicalScaleEstimate(
@@ -173,11 +180,12 @@ def estimate_pixels_per_um(
         scale_bar_length_um=float(scale_bar_length_um),
         scale_bar_pixels=best.width_px,
         confidence=best.confidence,
-        source="white_scale_bar",
+        source=best.source,
         failure_reason=None,
         image_shape=(height, width),
         bar_bbox_xyxy=best.bbox_xyxy,
         candidates_considered=len(candidates),
+        annotation_bbox_xyxy=best.annotation_bbox_xyxy,
     )
 
 
@@ -296,11 +304,52 @@ def _detect_white_scale_bars(
                 height,
                 search_region,
             )
+            if candidate is None:
+                continue
+            if component_height >= 8 and component_width / component_height < 12.0:
+                candidate = _measure_black_bar_in_panel(gray, candidate)
             if candidate is None or candidate.bbox_xyxy in seen:
                 continue
             seen.add(candidate.bbox_xyxy)
             candidates.append(candidate)
     return candidates
+
+
+def _measure_black_bar_in_panel(
+    gray: np.ndarray, panel: _BarCandidate
+) -> _BarCandidate | None:
+    """Measure the dark horizontal graphic, not its white label background.
+
+    The upper third excludes the caption. Width is the outer pixel-edge span
+    of the detected graphic, including its endpoint ticks, matching the width
+    convention used for solid white bars.
+    """
+    x0, y0, x1, y1 = panel.bbox_xyxy
+    height = max(3, int(np.ceil((y1 - y0) / 3.0)))
+    local = gray[y0 : min(y1, y0 + height), x0:x1]
+    dark = (local < min(100.0, 0.45 * float(np.max(local)))).astype(np.uint8)
+    count, _, stats, _ = cv2.connectedComponentsWithStats(dark, connectivity=8)
+    choices = []
+    for label in range(1, count):
+        x, y, width, bar_height, area = (int(value) for value in stats[label])
+        if width < 0.55 * (x1 - x0) or bar_height < 1:
+            continue
+        if width / bar_height < 6.0 or area / (width * bar_height) < 0.15:
+            continue
+        # Exclude the outer frame and require white margins around the graphic.
+        if x <= 0 or x + width >= x1 - x0 or y <= 0:
+            continue
+        choices.append((width, area, x, y, bar_height))
+    if not choices:
+        return None
+    width, _, x, y, bar_height = max(choices)
+    return _BarCandidate(
+        width_px=float(width),
+        bbox_xyxy=(x0 + x, y0 + y, x0 + x + width, y0 + y + bar_height),
+        confidence=panel.confidence,
+        source="black_scale_bar_in_label_panel",
+        annotation_bbox_xyxy=panel.bbox_xyxy,
+    )
 
 
 def _search_rectangles(
@@ -338,9 +387,8 @@ def _score_component(
     fill_ratio = area / float(component_width * component_height)
     if width_fraction < 0.018 or width_fraction > 0.55:
         return None
-    # Some acquisition systems render a white rectangular scale-label panel
-    # around the bar.  Its aspect ratio can be near 4.4 while text glyphs
-    # remain far below 4.0, so retain this panel as a valid bar proxy.
+    # A thick rectangle can locate an annotation panel, but its internal bar
+    # must be measured separately before this candidate is accepted.
     if height_fraction > 0.045 or aspect_ratio < 4.0 or fill_ratio < 0.70:
         return None
 

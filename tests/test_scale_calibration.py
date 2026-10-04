@@ -95,7 +95,7 @@ def test_detected_unlabelled_bar_exposes_audit_failure_reason() -> None:
     assert result.confidence >= 0.62
 
 
-def test_detects_a_white_scale_label_panel_with_text() -> None:
+def _label_panel_image(*, include_bar: bool) -> np.ndarray:
     # This matches target images whose 200 um annotation is a white panel with
     # a black border and text, rather than a thin solid white line.
     image = np.full((900, 1500, 3), (72, 154, 190), dtype=np.uint8)
@@ -103,6 +103,10 @@ def test_detects_a_white_scale_label_panel_with_text() -> None:
     x0, y0 = 1500 - panel_width - 28, 900 - panel_height - 25
     cv2.rectangle(image, (x0, y0), (x0 + panel_width - 1, y0 + panel_height - 1), (255, 255, 255), -1)
     cv2.rectangle(image, (x0, y0), (x0 + panel_width - 1, y0 + panel_height - 1), (0, 0, 0), 2)
+    if include_bar:
+        cv2.rectangle(image, (x0 + 12, y0 + 6), (x0 + 161, y0 + 7), (0, 0, 0), -1)
+        cv2.line(image, (x0 + 12, y0 + 6), (x0 + 12, y0 + 10), (0, 0, 0), 1)
+        cv2.line(image, (x0 + 161, y0 + 6), (x0 + 161, y0 + 10), (0, 0, 0), 1)
     cv2.putText(
         image,
         "200 um",
@@ -114,14 +118,50 @@ def test_detects_a_white_scale_label_panel_with_text() -> None:
         cv2.LINE_AA,
     )
 
-    result = estimate_pixels_per_um(image, scale_bar_length_um=200.0)
+    return image
 
-    # The black border reduces the detected white rectangle by two pixels per
-    # side; calibration intentionally reports that measured inner-panel width.
+
+def test_label_panel_calibration_measures_internal_bar_not_frame() -> None:
+    image = _label_panel_image(include_bar=True)
+    original = image.copy()
+    result = estimate_pixels_per_um(image, scale_bar_length_um=200.0)
     assert result.success, result.failure_reason
-    assert result.scale_bar_pixels == pytest.approx(panel_width - 4, abs=1.0)
-    assert result.pixels_per_um == pytest.approx((panel_width - 4) / 200.0, rel=0.02)
+    assert result.source == "black_scale_bar_in_label_panel"
+    assert result.scale_bar_pixels == 150.0
+    assert result.pixels_per_um == 0.75
+    assert result.annotation_bbox_xyxy is not None
+    assert result.bar_bbox_xyxy != result.annotation_bbox_xyxy
     assert result.confidence >= 0.62
+    assert np.array_equal(image, original)
+
+
+def test_label_panel_without_a_bar_does_not_fabricate_calibration() -> None:
+    result = estimate_pixels_per_um(_label_panel_image(include_bar=False), scale_bar_length_um=200.0)
+    assert not result.success
+    assert result.pixels_per_um is None
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "length_um", "bar_pixels"),
+    [
+        ("target_images/target_01.jpg", 200.0, 316.0),
+        ("reference_images/S.png", 500.0, 339.0),
+        ("reference_images/T.png", 500.0, 120.0),
+        ("reference_images/U.png", 500.0, 120.0),
+        ("reference_images/Z.png", 500.0, 124.0),
+    ],
+)
+def test_committed_inputs_measure_the_black_scale_graphic(
+    relative_path: str, length_um: float, bar_pixels: float
+) -> None:
+    from pathlib import Path
+    from microscopy_matching.image_processing import read
+
+    path = Path(__file__).resolve().parents[1] / "data/input" / relative_path
+    result = estimate_pixels_per_um(read(path), scale_bar_length_um=length_um)
+    assert result.success, result.failure_reason
+    assert result.source == "black_scale_bar_in_label_panel"
+    assert result.scale_bar_pixels == bar_pixels
 
 
 def test_absent_scale_bar_fails_instead_of_fabricating_calibration() -> None:

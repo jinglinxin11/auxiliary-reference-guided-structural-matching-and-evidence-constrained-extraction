@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 import cv2
 import numpy as np
 import pytest
@@ -7,6 +8,7 @@ from skimage.morphology import skeletonize
 
 from microscopy_matching.image_processing import Structure
 from microscopy_matching.registration import (
+    _sample_axial_angles,
     UnifiedSearchConfig,
     analysis_scale_prior,
     native_affine,
@@ -15,6 +17,24 @@ from microscopy_matching.registration import (
     similarity_matrix,
     translation_score_landscape,
 )
+
+
+def test_axial_interpolation_preserves_direction_across_zero_pi_seam() -> None:
+    angles = np.deg2rad(np.asarray([[1.0, 179.0]], dtype=np.float32))
+    sampled = _sample_axial_angles(angles, np.asarray([[0.5, 0.0]], dtype=np.float32))[0]
+    assert np.cos(2.0 * sampled) == pytest.approx(1.0, abs=1e-6)
+    assert abs(np.sin(2.0 * sampled)) < 1e-6
+
+
+def test_axial_interpolation_is_invariant_to_pi_reversal() -> None:
+    angles = np.deg2rad(np.asarray([[20.0, 40.0]], dtype=np.float32))
+    points = np.asarray([[0.5, 0.0]], dtype=np.float32)
+    first = _sample_axial_angles(angles, points)
+    reversed_angles = angles.copy()
+    reversed_angles[0, 1] += np.pi
+    second = _sample_axial_angles(reversed_angles, points)
+    assert np.allclose(np.cos(2 * first), np.cos(2 * second), atol=1e-6)
+    assert np.allclose(np.sin(2 * first), np.sin(2 * second), atol=1e-6)
 
 
 def _structure(mask: np.ndarray) -> Structure:
@@ -130,6 +150,22 @@ def test_native_affine_is_derived_from_the_selected_match() -> None:
     selected = similarity_matrix(auxiliary.bbox, result.scale, result.angle_deg, result.dx, result.dy)
 
     assert np.allclose(native, selected, atol=1e-5)
+
+
+@pytest.mark.parametrize("angle", [0.0, 17.0])
+def test_native_affine_uses_separate_source_and_target_analysis_shapes(angle: float) -> None:
+    mask = np.zeros((100, 100), dtype=bool)
+    mask[20:80, 50] = True
+    auxiliary = _structure(mask)
+    match = SimpleNamespace(scale=1.0, angle_deg=angle, dx=3.0, dy=-2.0)
+    matrix = native_affine(
+        auxiliary, match, source_shape=(200, 200), target_shape=(400, 200),
+        analysis_shape=(200, 100),
+    )
+    analysis = np.eye(3)
+    analysis[:2] = similarity_matrix(auxiliary.bbox, 1.0, angle, 3.0, -2.0)
+    expected = np.diag([2.0, 2.0, 1.0]) @ analysis @ np.diag([0.5, 0.5, 1.0])
+    assert np.allclose(matrix, expected[:2], atol=1e-6)
 
 
 def test_central_auxiliary_support_removes_remote_observed_outlier_without_adding_pixels() -> None:

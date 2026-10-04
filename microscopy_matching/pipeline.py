@@ -19,7 +19,6 @@ from .image_processing import Structure, build_structure, corridor_from_points, 
 from .registration import (
     UnifiedMatch,
     UnifiedSearchConfig,
-    analysis_scale_prior,
     native_affine,
     native_bbox,
     refine_candidate,
@@ -31,13 +30,7 @@ from .scale_calibration import PhysicalScaleEstimate, estimate_pixels_per_um
 
 DEFAULT_TARGET_SCALE_BAR_UM = 200.0
 DEFAULT_AUXILIARY_SCALE_BAR_UM = 500.0
-TARGET_REFERENCED_SEARCH = UnifiedSearchConfig(
-    physical_residual_scale_range=(0.60, 1.80),
-    physical_residual_scale_count=7,
-    include_generic_scale_fallback=True,
-    fine_scale_half_width=0.12,
-    physical_prior_weight=0.08,
-)
+FREE_MATCHING_SEARCH = UnifiedSearchConfig(physical_prior_weight=0.0)
 
 
 @dataclass(frozen=True)
@@ -74,6 +67,7 @@ class PipelineRun:
     target_calibrations: tuple[PhysicalScaleEstimate, ...] = ()
     reference_calibrations: tuple[PhysicalScaleEstimate, ...] = ()
     matches: tuple[tuple[UnifiedMatch, ...], ...] = ()
+    search_config: UnifiedSearchConfig = FREE_MATCHING_SEARCH
 
 
 def _calibrations(images: list[np.ndarray], scale_bar_length_um: float) -> list[PhysicalScaleEstimate]:
@@ -81,35 +75,6 @@ def _calibrations(images: list[np.ndarray], scale_bar_length_um: float) -> list[
         estimate_pixels_per_um(image, scale_bar_length_um=scale_bar_length_um)
         for image in images
     ]
-
-
-def _required_target_referenced_scale(
-    target_image: np.ndarray,
-    auxiliary_image: np.ndarray,
-    target: Structure,
-    auxiliary: Structure,
-    target_calibration: PhysicalScaleEstimate,
-    auxiliary_calibration: PhysicalScaleEstimate,
-) -> tuple[float, float]:
-    """Return a mandatory auxiliary-to-target scale in target coordinates."""
-
-    prior = analysis_scale_prior(
-        source_pixels_per_um=auxiliary_calibration.pixels_per_um,
-        target_pixels_per_um=target_calibration.pixels_per_um,
-        source_native_shape=auxiliary_image.shape[:2],
-        target_native_shape=target_image.shape[:2],
-        source_analysis_shape=auxiliary.image.shape[:2],
-        target_analysis_shape=target.image.shape[:2],
-    )
-    if prior is None:
-        raise RuntimeError(
-            "Target-referenced physical calibration is required; "
-            "both target and auxiliary scale bars must be detected."
-        )
-    confidence = float(min(target_calibration.confidence, auxiliary_calibration.confidence))
-    if confidence <= 0.0:
-        raise RuntimeError("Target-referenced physical calibration has zero confidence.")
-    return prior, confidence
 
 
 def _render_target_evidence(
@@ -247,8 +212,12 @@ def run_pipeline(
     *,
     target_scale_bar_um: float = DEFAULT_TARGET_SCALE_BAR_UM,
     auxiliary_scale_bar_um: float = DEFAULT_AUXILIARY_SCALE_BAR_UM,
+    search_config: UnifiedSearchConfig = FREE_MATCHING_SEARCH,
 ) -> PipelineRun:
-    """Run label-free, independent matching without writing intermediate files."""
+    """Run independent free matching; calibration is reporting/display only."""
+
+    if search_config.physical_prior_weight != 0.0 or search_config.physical_residual_scale_range is not None:
+        raise ValueError("Free matching must not activate a physical-scale prior.")
 
     resolved_target_dir = target_dir.resolve()
     resolved_reference_dir = reference_dir.resolve()
@@ -272,21 +241,16 @@ def run_pipeline(
     for target_index, target in enumerate(targets):
         target_matches: list[UnifiedMatch] = []
         for candidate_index, auxiliary in enumerate(auxiliaries):
-            physical_scale_prior, physical_prior_confidence = _required_target_referenced_scale(
-                target_images[target_index],
-                auxiliary_images[candidate_index],
-                target,
-                auxiliary,
-                target_calibrations[target_index],
-                auxiliary_calibrations[candidate_index],
-            )
             match = refine_candidate(
                 target,
                 auxiliary,
-                physical_scale_prior=physical_scale_prior,
-                physical_prior_confidence=physical_prior_confidence,
-                physical_scale_available=True,
-                config=TARGET_REFERENCED_SEARCH,
+                physical_scale_prior=None,
+                physical_prior_confidence=0.0,
+                physical_scale_available=bool(
+                    target_calibrations[target_index].success
+                    and auxiliary_calibrations[candidate_index].success
+                ),
+                config=search_config,
             )
             target_matches.append(match)
             pair_rows.append(
@@ -344,7 +308,7 @@ def run_pipeline(
             "physical_scale_prior": best.physical_scale_prior,
             "physical_scale_score": best.physical_scale_score,
             "physical_scale_available": best.physical_scale_available,
-            "physical_scale_mode": "target_200um_reference_500um_calibrated",
+            "physical_scale_mode": "report_only",
             "target_scale_bar_um": target_scale_bar_um,
             "auxiliary_scale_bar_um": auxiliary_scale_bar_um,
             "physical_analysis_scale_residual": (
@@ -394,6 +358,7 @@ def run_pipeline(
         target_calibrations=tuple(target_calibrations),
         reference_calibrations=tuple(auxiliary_calibrations),
         matches=tuple(tuple(target_matches) for target_matches in matches),
+        search_config=search_config,
     )
 
 
@@ -431,7 +396,7 @@ def minimal_results_payload(run: PipelineRun) -> dict[str, object]:
             }
         )
     return {
-        "mode": "automatic_independent_target_200um_reference_500um_calibrated",
+        "mode": "automatic_independent_free_matching",
         "binary_rule": "target_foreground_and_registered_auxiliary_corridor",
         "results": results,
     }

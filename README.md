@@ -24,20 +24,35 @@ The two input sets do not use the same acquisition annotation:
 
 | image set | validated native scale-bar length | role in the workflow |
 | --- | ---: | --- |
-| target images | 200 µm | defines the manuscript display coordinate system |
-| reference images | 500 µm | calibrates reference pixels before registration |
+| target images | 200 µm | physical reporting and figure display |
+| reference images | 500 µm | physical reporting and figure display only |
 
 The program detects the scale-bar graphic but does not infer its text by OCR.
 The validated lengths above are explicit defaults and are recorded in the
-generated JSON/CSV provenance. Reference images are calibrated at 500 µm for
-the numerical registration; any reference view exported for the manuscript is
+generated JSON/CSV provenance. Calibration does not constrain registration or
+contribute to candidate ranking on this free-matching branch. Any reference view exported for the manuscript is
 then isotropically resampled to target-referenced sampling and labelled with a
 200 µm bar. A common physical canvas is formed with background-only padding,
 so the composite uses the same pixels-per-micrometre for every candidate. The
 committed native inputs remain unchanged for audit. No specimen crop or
 content-dependent zoom is used in this conversion.
 
+Matching uses the archived generic seven-point scale grid from 0.70 to 1.60,
+with local scale refinement of +/-14%, coarse rotations -5/0/5 degrees and
+translations limited to +/-144 analysis pixels. It is free of a physical-scale
+prior, not an unbounded transform search. Registration optimizes geometry G;
+topology T is evaluated at that transform, and F = 0.72G + 0.28T ranks candidates.
+The score matrix is not a statistical confusion matrix or an accuracy estimate.
+No human-review thresholds or flags participate in the pipeline.
+
 ## Run
+
+For a white annotation panel, calibration measures the black horizontal bar
+inside the panel, not the panel width. The detected bar and annotation bounds
+are recorded separately in the figure diagnostics. Bar width uses its outer
+pixel-edge span, including the endpoint ticks. Native affine conversion uses
+the separate source and target analysis shapes; axial directions are sampled
+through their double-angle vectors rather than interpolating wrapped angles.
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -96,6 +111,16 @@ scale-conversion audit are documented in
 [`paper_figures/README.md`](paper_figures/README.md). The manuscript may cite
 the repository root and this reviewer entry point instead of enumerating local
 Windows paths or every generated filename.
+
+## Free-matching revision
+
+Branch `free-matching-si-20261004` integrates the free-search settings from the
+supplied reproduction archive with the existing figure framework. Black-bar
+calibration, source/target native-coordinate conversion and axial double-angle
+interpolation are corrected. Scores must therefore be regenerated, not copied
+from the historical screenshot. See `docs/free_matching_revision.md` for the
+code/Supplementary Information alignment. Supplementary documents are delivered
+locally and are not published with the code branch.
 
 ## Supplementary Figure S14 reproduction
 
