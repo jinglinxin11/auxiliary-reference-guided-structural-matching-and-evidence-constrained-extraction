@@ -1,8 +1,9 @@
 # Free Matching / Supplementary Information Alignment
 
-This branch combines the supplied screenshot-reproduction free matching
-configuration with the existing GitHub paper-figure framework. It does not
-overwrite main, read a main manuscript, or publish a supplementary document.
+This revision combines the supplied screenshot-reproduction free matching
+configuration with the existing GitHub paper-figure framework. It was developed
+on `free-matching-si-20261004` and merged into `main` at the user's request.
+No main manuscript was read and no supplementary document is published here.
 
 ## Retained Framework
 
@@ -30,7 +31,13 @@ parameters, result values, component/sensitivity tables, provenance links and
 their corresponding embedded figures. Preserve other text, equations, table
 formatting, figure placement and package entries. Color inserted/replaced text
 red against the user's original SI; remove obsolete human-review content.
+Equation (17) is updated to the active free-search convention G = G0, w = 0.
 Deliver the revised SI locally, not in this public repository.
+
+Method references 34--39 remain applicable; their DOI records were verified.
+References 40 (scikit-image) and 41 (SciPy) identify the actual implementation
+libraries. Earlier SI reference numbers remain unchanged. The code/citation
+mapping and evidence limits are in `matching_references.md`.
 
 ## Evidence Boundaries
 

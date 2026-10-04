@@ -114,13 +114,16 @@ Windows paths or every generated filename.
 
 ## Free-matching revision
 
-Branch `free-matching-si-20261004` integrates the free-search settings from the
+The free-matching revision, developed on `free-matching-si-20261004` and merged
+into `main`, integrates the free-search settings from the
 supplied reproduction archive with the existing figure framework. Black-bar
 calibration, source/target native-coordinate conversion and axial double-angle
 interpolation are corrected. Scores must therefore be regenerated, not copied
 from the historical screenshot. See `docs/free_matching_revision.md` for the
 code/Supplementary Information alignment. Supplementary documents are delivered
 locally and are not published with the code branch.
+Verified method and implementation citations are mapped to the actual code in
+[`docs/matching_references.md`](docs/matching_references.md).
 
 ## Supplementary Figure S14 reproduction
 
