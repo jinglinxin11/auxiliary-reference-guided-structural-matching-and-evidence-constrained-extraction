@@ -8,6 +8,40 @@ from microscopy_matching.pipeline import FREE_MATCHING_SEARCH, PipelineRun
 from paper_figures import diagnostics
 
 
+def test_configure_arial_discovers_installed_fonts(monkeypatch, tmp_path) -> None:
+    regular, bold = tmp_path / "arial.ttf", tmp_path / "arialbd.ttf"
+    regular.touch()
+    bold.touch()
+    requests, registered = [], []
+
+    def findfont(properties, *, fallback_to_default):
+        requests.append((properties.get_family(), properties.get_weight(), fallback_to_default))
+        return str(bold if properties.get_weight() == "bold" else regular)
+
+    monkeypatch.setattr(diagnostics.font_manager, "findfont", findfont)
+    monkeypatch.setattr(diagnostics.font_manager.fontManager, "addfont", registered.append)
+    assert diagnostics.configure_arial() == regular
+    assert requests == [(["Arial"], "normal", False), (["Arial"], "bold", False)]
+    assert registered == [str(regular), str(bold)]
+
+
+def test_configure_arial_rejects_missing_family(monkeypatch) -> None:
+    def findfont(*args, **kwargs):
+        raise ValueError("Font family unavailable")
+
+    monkeypatch.setattr(diagnostics.font_manager, "findfont", findfont)
+    with pytest.raises(RuntimeError, match="Arial and Arial Bold are required"):
+        diagnostics.configure_arial()
+
+
+def test_configure_arial_rejects_regular_font_as_bold(monkeypatch, tmp_path) -> None:
+    regular = tmp_path / "arial.ttf"
+    regular.touch()
+    monkeypatch.setattr(diagnostics.font_manager, "findfont", lambda *args, **kwargs: str(regular))
+    with pytest.raises(RuntimeError, match="Arial and Arial Bold are required"):
+        diagnostics.configure_arial()
+
+
 def test_paper_diagnostics_uses_free_grid_and_pipeline_scoring_config(monkeypatch) -> None:
     paths = tuple(Path(f"{index}.png") for index in range(4))
     structures = tuple(object() for _ in range(4))

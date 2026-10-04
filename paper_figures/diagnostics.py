@@ -15,6 +15,7 @@ from pathlib import Path
 
 import cv2
 import matplotlib as mpl
+from matplotlib import font_manager
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -39,26 +40,20 @@ SEARCH_BOUND_VALUES = np.asarray((1.60, 1.75, 1.90), dtype=np.float64)
 
 
 def configure_arial() -> Path:
-    candidates = (
-        (Path("C:/Windows/Fonts/arial.ttf"), Path("C:/Windows/Fonts/arialbd.ttf")),
-        (
-            Path("/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"),
-            Path("/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf"),
-        ),
-        (
-            Path("/usr/share/fonts/truetype/msttcorefonts/arial.ttf"),
-            Path("/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf"),
-        ),
-    )
-    selected = next(
-        ((regular, bold) for regular, bold in candidates if regular.is_file() and bold.is_file()),
-        None,
-    )
-    if selected is None:
+    try:
+        regular, bold = (
+            Path(font_manager.findfont(
+                font_manager.FontProperties(family=["Arial"], weight=weight),
+                fallback_to_default=False,
+            ))
+            for weight in ("normal", "bold")
+        )
+    except ValueError:
+        raise RuntimeError("Arial and Arial Bold are required to render the manuscript figures.") from None
+    if regular == bold or not regular.is_file() or not bold.is_file():
         raise RuntimeError("Arial and Arial Bold are required to render the manuscript figures.")
-    regular, bold = selected
-    mpl.font_manager.fontManager.addfont(str(regular))
-    mpl.font_manager.fontManager.addfont(str(bold))
+    font_manager.fontManager.addfont(str(regular))
+    font_manager.fontManager.addfont(str(bold))
     mpl.rcParams.update(
         {
             "font.family": "Arial",

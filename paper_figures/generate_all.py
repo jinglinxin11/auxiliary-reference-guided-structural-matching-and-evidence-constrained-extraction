@@ -49,9 +49,8 @@ def main() -> None:
     outdir.mkdir(parents=True, exist_ok=True)
 
     font_path = configure_arial()
-    print(f"Arial resolved for all manuscript figures: {font_path}")
-    print(f"Running matching from targets: {targets}")
-    print(f"Running matching from references: {references}")
+    print("Arial configured for all manuscript figures.")
+    print("Running matching from the configured target and reference inputs.")
     run = run_pipeline(
         targets,
         references,

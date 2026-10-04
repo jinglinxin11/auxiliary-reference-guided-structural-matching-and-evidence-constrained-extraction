@@ -106,4 +106,4 @@ target_04 -> Z
 - 论文图不再读取冻结组合图或写死的论文分数。绘图入口要求系统安装 Arial；如果找不到 Arial 会直接报错，不会静默换字体。
 - 论文图均为 RGB、600 dpi PNG，不生成 ZIP、Word、PDF、SVG 或 TIFF。
 - `paper_figures/generated/` 不提交到 Git。审稿人使用上述一键入口从仓库中提交的原始输入和当前算法重新生成全部结果，避免旧 PNG 或人工后处理图与代码不一致。
-- 补充材料中建议只引用 GitHub 仓库和上述一键入口，不再枚举本地 Windows 路径或全部输出文件名；完整输出清单和定义统一维护在 `paper_figures/README.md`。
+- 补充材料中引用 GitHub 仓库和上述一键入口；完整输出清单和定义统一维护在 `paper_figures/README.md`。

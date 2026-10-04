@@ -104,4 +104,4 @@ target_04 -> Z
 - Manuscript figures no longer load frozen composites or hard-coded manuscript scores. Arial is required and the run fails rather than silently substituting another font.
 - Manuscript outputs are RGB 600 dpi PNG files; no ZIP, Word, PDF, SVG, or TIFF is generated.
 - `paper_figures/generated/` is not committed to Git. Reviewers regenerate every result from the committed inputs and current algorithm, preventing stale or manually post-processed PNG files from diverging from the source code.
-- In the Supplementary Information, cite the repository and the single reviewer command instead of listing local machine paths or every output filename. The output inventory and definitions are maintained in `paper_figures/README.md`.
+- In the Supplementary Information, cite the repository and the single reviewer command. The output inventory and definitions are maintained in `paper_figures/README.md`.

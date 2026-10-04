@@ -112,8 +112,7 @@ from diverging from the published source code.
 Detailed file definitions, numerical formulas, output counts, and the
 scale-conversion audit are documented in
 [`paper_figures/README.md`](paper_figures/README.md). The manuscript may cite
-the repository root and this reviewer entry point instead of enumerating local
-Windows paths or every generated filename.
+the repository root and this reviewer entry point.
 
 ## Free-matching revision
 
