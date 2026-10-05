@@ -14,4 +14,6 @@ def test_matching_source_tree_has_no_uv_nir_archive():
 def test_matching_sources_have_no_personal_default_paths():
     pattern = re.compile(rb'[A-Za-z]:[\\/]+Users[\\/]+|/(?:home|Users)/', re.I)
     for path in REPO.rglob('*.py'):
+        if any(part in {'.venv', 'venv', '.git', '__pycache__', '.pytest_cache'} for part in path.relative_to(REPO).parts):
+            continue
         assert pattern.search(path.read_bytes()) is None, path.relative_to(REPO)

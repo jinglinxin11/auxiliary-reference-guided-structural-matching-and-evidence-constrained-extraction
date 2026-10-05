@@ -116,7 +116,7 @@ an internal filename suffix.
 Paths are relative to `paper_figures/generated/`. Exact filenames and final-number
 export names are provided in the [machine-readable map](../manuscript_figure_map.json).
 Original image bytes, scientific arrays, and internal panel names are unchanged.
-The separate legacy six-ROI `figure_s14/` archive is not manuscript Fig. 14.
+The separately distributed legacy six-ROI archive is not manuscript Fig. 14.
 
 ```text
 paper_figures/generated/
