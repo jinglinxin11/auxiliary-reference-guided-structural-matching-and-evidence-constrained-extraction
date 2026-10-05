@@ -18,6 +18,11 @@ integrity metadata are revised; parsed CSV/JSON values, profile samples, images
 and plotting calculations are unchanged. The validator also checks coverage,
 duplicate entries and byte sizes.
 
+PNG is the canonical 600-dpi raster for S14. TIFF is now saved losslessly from
+that PNG, rather than by a second Matplotlib renderer pass, and its size, mode
+and every pixel are verified after reload. PDF/SVG and all scientific plotting
+calculations are unchanged.
+
 CI checks S14 input integrity on Windows and Linux and runs both plotting entry
 points on Windows, where the required Arial family is available. This does not
 claim a local Linux end-to-end plotting test.

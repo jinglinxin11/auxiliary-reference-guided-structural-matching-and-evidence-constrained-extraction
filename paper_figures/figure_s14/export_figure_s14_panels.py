@@ -34,13 +34,7 @@ def save_panel(fig: mpl.figure.Figure, stem: Path) -> list[dict[str, str]]:
     fig.savefig(paths[0], facecolor="white", transparent=False)
     fig.savefig(paths[1], facecolor="white", transparent=False)
     fig.savefig(paths[2], dpi=600, facecolor="white", transparent=False)
-    fig.savefig(
-        paths[3],
-        dpi=600,
-        facecolor="white",
-        transparent=False,
-        pil_kwargs={"compression": "tiff_lzw"},
-    )
+    s14.save_lossless_tiff(paths[2], paths[3])
     plt.close(fig)
     return [{"path": str(path), "sha256": s14.sha256_file(path)} for path in paths]
 

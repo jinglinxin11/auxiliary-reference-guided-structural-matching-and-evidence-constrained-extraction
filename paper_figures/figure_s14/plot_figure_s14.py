@@ -125,6 +125,17 @@ def validate_source_data() -> dict:
     return manifest
 
 
+def save_lossless_tiff(png: Path, tiff: Path) -> None:
+    """Reuse the canonical raster instead of triggering another renderer pass."""
+    with Image.open(png) as image:
+        image.save(tiff, format='TIFF', compression='tiff_lzw', dpi=(600, 600))
+        expected_size, expected_mode, expected_pixels = image.size, image.mode, image.tobytes()
+    with Image.open(tiff) as image:
+        if (image.size != expected_size or image.mode != expected_mode
+                or image.tobytes() != expected_pixels):
+            raise RuntimeError('PNG/TIFF lossless export verification failed')
+
+
 def require_arial() -> None:
     """Require the manuscript font instead of silently substituting another font."""
     try:
@@ -535,13 +546,7 @@ def make_figure(output_dir: Path) -> dict:
     fig.savefig(stem.with_suffix(".pdf"), facecolor="white", transparent=False)
     fig.savefig(stem.with_suffix(".svg"), facecolor="white", transparent=False)
     fig.savefig(stem.with_suffix(".png"), dpi=600, facecolor="white", transparent=False)
-    fig.savefig(
-        stem.with_suffix(".tif"),
-        dpi=600,
-        facecolor="white",
-        transparent=False,
-        pil_kwargs={"compression": "tiff_lzw"},
-    )
+    save_lossless_tiff(stem.with_suffix('.png'), stem.with_suffix('.tif'))
     plt.close(fig)
 
     exported_paths = [stem.with_suffix(ext) for ext in (".pdf", ".svg", ".png", ".tif")]

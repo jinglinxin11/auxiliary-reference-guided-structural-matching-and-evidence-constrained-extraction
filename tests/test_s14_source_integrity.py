@@ -52,3 +52,18 @@ def test_s14_rejects_corruption_and_unlisted_inputs(tmp_path, monkeypatch):
     (data / 'unlisted.csv').write_bytes(original)
     with pytest.raises(RuntimeError, match='coverage mismatch'):
         module.validate_source_data()
+
+
+def test_s14_tiff_export_preserves_every_png_pixel(tmp_path):
+    pytest.importorskip('pandas')
+    from PIL import Image
+    import numpy as np
+    module = plotting_module()
+    data = np.arange(8 * 11 * 4, dtype=np.uint8).reshape(8, 11, 4)
+    png, tiff = tmp_path / 'fixture.png', tmp_path / 'fixture.tif'
+    Image.fromarray(data).save(png, dpi=(600, 600))
+    module.save_lossless_tiff(png, tiff)
+    with Image.open(tiff) as image:
+        assert image.tobytes() == data.tobytes()
+        assert image.info['compression'] == 'tiff_lzw'
+        assert tuple(image.info['dpi']) == (600., 600.)
