@@ -81,6 +81,14 @@ python -B -m pytest -q tests
 
 ## Paper-figure code
 
+Historical internal figure names remain compatible. The current merged
+manuscript numbering is documented in the
+[figure map](manuscript_figure_map.json) and
+[paper-figure guide](paper_figures/README.md#current-manuscript-numbering).
+Internal supplementary figures 4, 1, 2, 5 and 3 correspond to manuscript
+Figs. 18, 19, 20, 21 and 22, respectively. See the
+[maintenance record](docs/reproducibility_fixes_20261005.md).
+
 The reviewer entry point under [`paper_figures/`](paper_figures/README.md)
 runs the four-by-four matching algorithm directly from `data/input/`, writes
 all plotted diagnostic values, and exports eight standalone Figure H PNG
@@ -128,6 +136,12 @@ Verified method and implementation citations are mapped to the actual code in
 [`docs/matching_references.md`](docs/matching_references.md).
 
 ## Supplementary Figure S14 reproduction
+
+This is the **legacy six-ROI confinement workflow**, not current manuscript
+Fig. 14 (five transects, CIELAB a*, apparent W50). Its historical filenames are
+preserved for audit and its manifests identify it as
+`legacy_six_roi_confinement`. The matching reviewer command preserves these
+outputs; it clears only the four directories owned by matching.
 
 The UV-versus-NIR spatial-confinement analysis has two additional plotting
 entry points under

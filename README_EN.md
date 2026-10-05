@@ -1,5 +1,11 @@
 # Auxiliary-reference-guided structural matching and evidence-constrained extraction of laser-written photochromic patterns
 
+See the [current manuscript figure map](manuscript_figure_map.json) and
+[maintenance record](docs/reproducibility_fixes_20261005.md). Internal composites
+4, 1, 2, 5, 3 map to final Figs. 18, 19, 20, 21, 22. The legacy six-ROI S14
+workflow is not current five-transect W50 Fig. 14. Matching cleans only its own
+four output directories and preserves the legacy archive's outputs.
+
 Repository: [Source code](https://github.com/jinglinxin11/auxiliary-reference-guided-structural-matching-and-evidence-constrained-extraction).
 
 ## 1. Purpose

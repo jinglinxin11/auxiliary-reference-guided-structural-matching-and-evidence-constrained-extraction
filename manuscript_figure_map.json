@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "source_path_base": "repository_root",
+  "scope": "Current supplementary manuscript numbering. Internal supplementary 1-5 and Figure H labels are preserved. The legacy six-ROI S14 workflow is not current manuscript Figure 14.",
+  "figures": [
+    {"figure": 10, "panel": "a", "source": "paper_figures/generated/supplementary/individual_panels/suppfig1_target_01_a_structural_response.png", "export_name": "Supplementary_Figure_10a.png"},
+    {"figure": 10, "panel": "b", "source": "paper_figures/generated/supplementary/individual_panels/suppfig1_target_01_b_foreground_skeleton.png", "export_name": "Supplementary_Figure_10b.png"},
+    {"figure": 10, "panel": "c", "source": "paper_figures/generated/supplementary/individual_panels/suppfig1_target_01_c_registered_corridor.png", "export_name": "Supplementary_Figure_10c.png"},
+    {"figure": 10, "panel": "d", "source": "paper_figures/generated/supplementary/individual_panels/suppfig1_target_01_d_strict_matched_mask.png", "export_name": "Supplementary_Figure_10d.png"},
+    {"figure": 10, "panel": "e", "source": "paper_figures/generated/supplementary/individual_panels/suppfig1_target_01_e_target_presentation.png", "export_name": "Supplementary_Figure_10e.png"},
+    {"figure": 11, "source": "paper_figures/generated/figure_h/panel_c_pairwise_internal_score_matrix.png", "export_name": "Supplementary_Figure_11.png"},
+    {"figure": 18, "source": "paper_figures/generated/supplementary/supplementary_figure_4_candidate_references.png", "export_name": "Supplementary_Figure_18.png"},
+    {"figure": 19, "source": "paper_figures/generated/supplementary/supplementary_figure_1_casewise_evidence_flow.png", "export_name": "Supplementary_Figure_19.png"},
+    {"figure": 20, "source": "paper_figures/generated/supplementary/supplementary_figure_2_pairwise_ranking_transforms.png", "export_name": "Supplementary_Figure_20.png"},
+    {"figure": 21, "source": "paper_figures/generated/supplementary/supplementary_figure_5_candidate_comparison_robustness.png", "export_name": "Supplementary_Figure_21.png"},
+    {"figure": 22, "source": "paper_figures/generated/supplementary/supplementary_figure_3_registration_output_sensitivity.png", "export_name": "Supplementary_Figure_22.png"}
+  ]
+}

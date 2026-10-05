@@ -36,7 +36,7 @@ def save_panel(fig: mpl.figure.Figure, stem: Path) -> list[dict[str, str]]:
     fig.savefig(paths[2], dpi=600, facecolor="white", transparent=False)
     s14.save_lossless_tiff(paths[2], paths[3])
     plt.close(fig)
-    return [{"path": str(path), "sha256": s14.sha256_file(path)} for path in paths]
+    return [s14.export_record(path, stem.parent) for path in paths]
 
 
 def export_image_panel(
@@ -178,6 +178,11 @@ def export_panels(output_dir: Path) -> dict:
 
     manifest = {
         "figure": "Supplementary Figure S14 standalone panels",
+        "workflow_id": "legacy_six_roi_confinement",
+        "manuscript_figure": None,
+        "path_base": "manifest_directory",
+        "source_path_base": "repository_root",
+        "source_data_manifest": s14.SOURCE_MANIFEST.relative_to(s14.REPO_ROOT).as_posix(),
         "scope": "deterministic standalone exports from the same archived figure-level source data used by the composite script",
         "font": "Arial",
         "shared_exr_display_limits": {

@@ -31,8 +31,11 @@ python paper_figures/run_all.py
 
 The launcher creates a disposable virtual environment in the operating
 system's temporary directory, installs the pinned root requirements, safely
-clears only `paper_figures/generated/`, runs the algorithm and all plots, and
+clears only its `algorithm_results/`, `diagnostics/`, `figure_h/` and
+`supplementary/` children under `paper_figures/generated/`, runs the algorithm
+and all matching plots, and
 removes the temporary environment automatically.
+It preserves `generated/figure_s14/` and other workflows' artifacts.
 
 Custom input directories can be supplied without changing the code:
 
@@ -93,6 +96,27 @@ approved post-revision panel sequence. Supplementary Figure 1 reports all four
 targets, so no target is omitted from the processing evidence.
 
 ## Outputs
+
+### Current manuscript numbering
+
+The filenames below retain internal workflow numbering, not the final merged
+Supplementary Information numbering. Do not infer the paper figure number from
+an internal filename suffix.
+
+| Current manuscript figure | Internal output |
+| --- | --- |
+| Fig. 10a-e | `supplementary/individual_panels/suppfig1_target_01_a` through `e` |
+| Fig. 11 | `figure_h/panel_c_pairwise_internal_score_matrix.png` |
+| Fig. 18 | `supplementary/supplementary_figure_4_candidate_references.png` |
+| Fig. 19 | `supplementary/supplementary_figure_1_casewise_evidence_flow.png` |
+| Fig. 20 | `supplementary/supplementary_figure_2_pairwise_ranking_transforms.png` |
+| Fig. 21 | `supplementary/supplementary_figure_5_candidate_comparison_robustness.png` |
+| Fig. 22 | `supplementary/supplementary_figure_3_registration_output_sensitivity.png` |
+
+Paths are relative to `paper_figures/generated/`. Exact filenames and final-number
+export names are provided in the [machine-readable map](../manuscript_figure_map.json).
+Original image bytes, scientific arrays, and internal panel names are unchanged.
+The separate legacy six-ROI `figure_s14/` archive is not manuscript Fig. 14.
 
 ```text
 paper_figures/generated/
@@ -172,6 +196,9 @@ generated PNG files to a commit unless a clean end-to-end run has first passed
 and the repository's publication policy is deliberately changed.
 
 ## Supplementary Figure S14: UV-versus-NIR spatial confinement
+
+The S14 label here is historical. This archived six-ROI ExR workflow is distinct
+from current manuscript Fig. 14's five-transect CIELAB-a* W50 analysis.
 
 Figure S14 is reproduced from a separate, checksum-protected archive of its
 registered image pair, six frozen ROI coordinates, ROI-level metrics and 132

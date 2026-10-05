@@ -19,6 +19,9 @@ DEFAULT_TARGETS = REPO / "data" / "input" / "target_images"
 DEFAULT_REFERENCES = REPO / "data" / "input" / "reference_images"
 DEFAULT_TARGET_SCALE_BAR_UM = 200.0
 DEFAULT_REFERENCE_SCALE_BAR_UM = 500.0
+MATCHING_OUTPUT_DIRECTORIES = (
+    "algorithm_results", "diagnostics", "figure_h", "supplementary",
+)
 
 
 def environment_python(environment: Path) -> Path:
@@ -32,8 +35,16 @@ def clean_generated_directory() -> None:
     paper = PAPER.resolve()
     if generated == paper or paper not in generated.parents:
         raise RuntimeError(f"Refusing to clean unsafe path: {generated}")
-    if generated.exists():
-        shutil.rmtree(generated)
+    # S14 and other workflows share generated/, but are not owned by this run.
+    owned = [generated / name for name in MATCHING_OUTPUT_DIRECTORIES]
+    for path in owned:
+        if path.is_symlink() or path.resolve().parent != generated:
+            raise RuntimeError(f"Refusing to clean unsafe path: {path}")
+        if path.exists() and not path.is_dir():
+            raise RuntimeError(f"Expected an output directory: {path}")
+    for path in owned:
+        if path.exists():
+            shutil.rmtree(path)
     generated.mkdir(parents=True, exist_ok=True)
 
 

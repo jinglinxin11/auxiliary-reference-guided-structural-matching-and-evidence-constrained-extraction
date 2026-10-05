@@ -1,5 +1,18 @@
 # Reproducing Supplementary Figure S14
 
+**Historical numbering:** this is the legacy six-ROI ExR confinement archive,
+identified as `legacy_six_roi_confinement` in its manifests. It is not Fig. 14
+of the current merged Supplementary Information, which uses five fixed transects
+and CIELAB a* for apparent W50. Keep the archived S14 filenames; do not substitute
+these files for current manuscript Fig. 14. See the
+[current figure map](../../manuscript_figure_map.json).
+
+Both export manifests set `path_base` to `manifest_directory`. Their output
+`path` fields are portable relative POSIX paths; resolve each against the manifest's
+parent directory to verify its SHA-256 after copying or extracting the folder.
+Source-data paths instead use `source_path_base = repository_root`. The main
+matching reviewer launcher preserves these independent S14 output directories.
+
 This directory contains the two reviewer-facing plotting entry points for the
 248 nm UV versus 976 nm NIR spatial-confinement comparison:
 

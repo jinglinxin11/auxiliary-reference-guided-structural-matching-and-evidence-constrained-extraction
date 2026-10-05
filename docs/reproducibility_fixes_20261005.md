@@ -1,5 +1,11 @@
 # Reproduction integrity fixes, 5 October 2026
 
+The subsequent naming/structure revision adds a final-manuscript figure map,
+preserves legacy S14 outputs when rerunning matching, and records export paths
+relative to their manifests with explicit path bases. The legacy archive is
+identified separately from current manuscript Fig. 14. Original filenames,
+plotting calculations and scientific results are retained.
+
 This additive maintenance revision does not change registration, topology,
 candidate ranking, image evidence, the generic search grid, or the manuscript's
 200/500 micrometre default acquisition assumptions and 200 micrometre display

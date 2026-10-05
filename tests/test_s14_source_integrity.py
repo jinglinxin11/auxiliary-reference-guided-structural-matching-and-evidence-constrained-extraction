@@ -67,3 +67,22 @@ def test_s14_tiff_export_preserves_every_png_pixel(tmp_path):
         assert image.tobytes() == data.tobytes()
         assert image.info['compression'] == 'tiff_lzw'
         assert tuple(image.info['dpi']) == (600., 600.)
+
+
+@pytest.mark.parametrize('absolute', [False, True])
+def test_s14_export_record_survives_relocation(tmp_path, monkeypatch, absolute):
+    pytest.importorskip('pandas')
+    import shutil
+    module = plotting_module()
+    monkeypatch.chdir(tmp_path)
+    folder = Path('first/exports')
+    folder.mkdir(parents=True)
+    path = folder / 'panel.png'
+    path.write_bytes(b'exported figure bytes')
+    if absolute:
+        path, folder = path.resolve(), folder.resolve()
+    record = module.export_record(path, folder)
+    assert record['path'] == 'panel.png'
+    shutil.copytree(folder, tmp_path / 'relocated')
+    observed = tmp_path / 'relocated' / record['path']
+    assert hashlib.sha256(observed.read_bytes()).hexdigest() == record['sha256']

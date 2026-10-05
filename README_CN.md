@@ -1,5 +1,7 @@
 # 辅助参考引导的激光写入光致变色图案结构匹配与证据约束提取
 
+当前补充材料图号与仓库内部编号的对应见[图号映射](manuscript_figure_map.json)。内部总图 4、1、2、5、3 分别对应最终图 18、19、20、21、22。`figure_s14/` 是旧六 ROI ExR 归档流程，不是当前五测线 W50 图 14；匹配入口只清理自己负责的四个输出子目录，保留该归档流程结果。维护记录见[修复说明](docs/reproducibility_fixes_20261005.md)。
+
 英文标题：Auxiliary-reference-guided structural matching and evidence-constrained extraction of laser-written photochromic patterns
 
 仓库：[源代码](https://github.com/jinglinxin11/auxiliary-reference-guided-structural-matching-and-evidence-constrained-extraction)。

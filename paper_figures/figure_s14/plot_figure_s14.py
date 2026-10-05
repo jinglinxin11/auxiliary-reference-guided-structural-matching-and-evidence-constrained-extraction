@@ -552,6 +552,10 @@ def make_figure(output_dir: Path) -> dict:
     exported_paths = [stem.with_suffix(ext) for ext in (".pdf", ".svg", ".png", ".tif")]
     manifest = {
         "figure": "Supplementary Figure S14",
+        "workflow_id": "legacy_six_roi_confinement",
+        "manuscript_figure": None,
+        "path_base": "manifest_directory",
+        "source_path_base": "repository_root",
         "size_mm": list(FIGURE_SIZE_MM),
         "font": "Arial",
         "scope": "deterministic plotting from archived figure-level source data; upstream registration and ROI measurement are not rerun",
@@ -580,13 +584,19 @@ def make_figure(output_dir: Path) -> dict:
         },
         "source_data_manifest": SOURCE_MANIFEST.relative_to(REPO_ROOT).as_posix(),
         "exports": [
-            {"path": str(path), "sha256": sha256_file(path)}
+            export_record(path, output_dir)
             for path in exported_paths
         ],
     }
     manifest_path = output_dir / "Figure_S14_manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return manifest
+
+
+def export_record(path: Path, manifest_directory: Path) -> dict[str, str]:
+    """Locate an export relative to its manifest, independent of the run CWD."""
+    relative = path.resolve().relative_to(manifest_directory.resolve())
+    return {"path": relative.as_posix(), "sha256": sha256_file(path)}
 
 
 def parse_args() -> argparse.Namespace:
