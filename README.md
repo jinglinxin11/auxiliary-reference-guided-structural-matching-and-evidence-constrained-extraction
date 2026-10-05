@@ -135,27 +135,9 @@ locally and are not published with the code branch.
 Verified method and implementation citations are mapped to the actual code in
 [`docs/matching_references.md`](docs/matching_references.md).
 
-## Supplementary Figure S14 reproduction
+## Repository scope
 
-This is the **legacy six-ROI confinement workflow**, not current manuscript
-Fig. 14 (five transects, CIELAB a*, apparent W50). Its historical filenames are
-preserved for audit and its manifests identify it as
-`legacy_six_roi_confinement`. The matching reviewer command preserves these
-outputs; it clears only the four directories owned by matching.
-
-The UV-versus-NIR spatial-confinement analysis has two additional plotting
-entry points under
-[`paper_figures/figure_s14/`](paper_figures/figure_s14/README.md). The first
-regenerates the complete eight-panel Figure S14; the second exports its eight
-logical panels separately:
-
-```powershell
-python paper_figures/figure_s14/plot_figure_s14.py
-python paper_figures/figure_s14/export_figure_s14_panels.py
-```
-
-The directory includes pinned plotting dependencies, 138 checksum-protected
-figure-level source-data files and detailed reviewer instructions. These two
-commands reproduce the plotting stage from archived registered images and
-ROI-level outputs; they do not rerun the upstream registration or ROI
-measurement workflow.
+Only structural matching and its derived diagnostics and figures belong here.
+The unrelated legacy six-ROI UV/NIR plotting workflow is distributed separately
+in `Historical_Analysis_Archives.zip`, not inside this repository. Its historical
+S14 label must not be confused with current manuscript Fig. 14.

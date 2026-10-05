@@ -33,23 +33,3 @@ jobs:
       - name: Run unit tests
         run: python -B -m pytest -q tests
 
-  s14-reproduction:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install Figure S14 and test dependencies
-        run: python -m pip install -r paper_figures/figure_s14/requirements.txt pytest==8.3.4
-      - name: Check every archived input and corruption rejection
-        run: python -B -m pytest -q tests/test_s14_source_integrity.py
-      - name: Reproduce both Figure S14 entry points
-        if: runner.os == 'Windows'
-        run: |
-          python paper_figures/figure_s14/plot_figure_s14.py
-          python paper_figures/figure_s14/export_figure_s14_panels.py

@@ -35,7 +35,7 @@ clears only its `algorithm_results/`, `diagnostics/`, `figure_h/` and
 `supplementary/` children under `paper_figures/generated/`, runs the algorithm
 and all matching plots, and
 removes the temporary environment automatically.
-It preserves `generated/figure_s14/` and other workflows' artifacts.
+It preserves directories not owned by the matching workflow.
 
 Custom input directories can be supplied without changing the code:
 
@@ -195,25 +195,10 @@ one-command reproduction entry point—not by cached raster outputs. Do not add
 generated PNG files to a commit unless a clean end-to-end run has first passed
 and the repository's publication policy is deliberately changed.
 
-## Supplementary Figure S14: UV-versus-NIR spatial confinement
+## Repository scope
 
-The S14 label here is historical. This archived six-ROI ExR workflow is distinct
-from current manuscript Fig. 14's five-transect CIELAB-a* W50 analysis.
-
-Figure S14 is reproduced from a separate, checksum-protected archive of its
-registered image pair, six frozen ROI coordinates, ROI-level metrics and 132
-profile traces. From the repository root, run:
-
-```powershell
-python paper_figures/figure_s14/plot_figure_s14.py
-python paper_figures/figure_s14/export_figure_s14_panels.py
-```
-
-The first command exports the submitted eight-panel composite. The second
-exports the eight logical panels separately. Exact dependency setup, source
-files, output definitions, numerical checks and the boundary between plotting
-reproduction and upstream analysis are documented in
-[`figure_s14/README.md`](figure_s14/README.md).
+The legacy six-ROI UV/NIR archive is distributed separately and is not an
+input or output of structural matching.
 
 ## Rendering contract
 
@@ -247,6 +232,4 @@ paper_figures/
   diagnostics.py                         data-derived images and numerical source data
   generate_figure_h_panels.py            Figure H renderer
   scripts/export_supplementary_figures.py supplementary renderer
-  figure_s14/plot_figure_s14.py           complete Figure S14 renderer
-  figure_s14/export_figure_s14_panels.py  standalone Figure S14 panel renderer
 ```

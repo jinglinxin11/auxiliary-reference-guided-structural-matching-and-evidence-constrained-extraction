@@ -1,7 +1,7 @@
 # Reproduction integrity fixes, 5 October 2026
 
 The subsequent naming/structure revision adds a final-manuscript figure map,
-preserves legacy S14 outputs when rerunning matching, and records export paths
+preserves unrelated outputs when rerunning matching, and records export paths
 relative to their manifests with explicit path bases. The legacy archive is
 identified separately from current manuscript Fig. 14. Original filenames,
 plotting calculations and scientific results are retained.
@@ -16,25 +16,14 @@ hard-coded. The manuscript display bar remains a separate quantity. Default
 200/500 output JSON bytes and numerical results are retained; custom lengths
 are now reported consistently.
 
-Figure S14 source text is stored with canonical LF bytes and protected with
-`-text` attributes so Git never converts its hash-protected bytes on checkout.
-The 138-entry manifest is refreshed against those canonical committed bytes,
-including the already-committed analysis_pipeline.md. Only line endings and
-integrity metadata are revised; parsed CSV/JSON values, profile samples, images
-and plotting calculations are unchanged. The validator also checks coverage,
-duplicate entries and byte sizes.
+## Scope and privacy cleanup
 
-PNG is the canonical 600-dpi raster for S14. TIFF is now saved losslessly from
-that PNG, rather than by a second Matplotlib renderer pass, and its size, mode
-and every pixel are verified after reload. PDF/SVG and all scientific plotting
-calculations are unchanged.
+The unrelated legacy six-ROI UV/NIR source data, plotting scripts and integrity
+tests have moved out of this repository into a standalone historical archive.
+Its earlier hash and lossless-export repairs are retained there. Matching CI
+now tests only matching; the reviewer command is unchanged.
 
-CI checks S14 input integrity on Windows and Linux and runs both plotting entry
-points on Windows, where the required Arial family is available. This does not
-claim a local Linux end-to-end plotting test.
-
-The original reviewer command and both Figure S14 commands remain unchanged.
-S14 regenerates archived plots only, not its upstream ROI measurement workflow.
-No scientific manuscript changes are required by these fixes. To cite the
-maintenance implementation itself, record its new revision separately from the
-historical source revision that produced the original study results.
+Current source files and delivery artifacts are scanned for personal filesystem
+roots. Paths in new export manifests are relative. Git history and old release
+tags are intentionally not rewritten. No manuscript file or scientific formula
+is modified; maintenance revisions are distinct from the original study record.

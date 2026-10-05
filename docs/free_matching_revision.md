@@ -24,15 +24,11 @@ points are unchanged. Human-review flags and thresholds remain absent.
 - The scale-sensitivity diagnostic varies the generic grid upper bound, not a
   physical residual bound. Seven points remain, so grid spacing also changes.
 
-## SI Changes
+## Method Alignment
 
-Revise only matching-related method descriptions, calibration roles, search
-parameters, result values, component/sensitivity tables, provenance links and
-their corresponding embedded figures. Preserve other text, equations, table
-formatting, figure placement and package entries. Color inserted/replaced text
-red against the user's original SI; remove obsolete human-review content.
-Equation (17) is updated to the active free-search convention G = G0, w = 0.
-Deliver the revised SI locally, not in this public repository.
+The matching-related method descriptions, scale roles, search parameters and
+versioned results use the active free-search convention G = G0, w = 0.
+Manuscript editing instructions are not part of the scientific implementation.
 
 Method references 34--39 remain applicable; their DOI records were verified.
 References 40 (scikit-image) and 41 (SciPy) identify the actual implementation
