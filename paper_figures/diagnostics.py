@@ -541,6 +541,16 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def native_scale_bar_length(calibrations, label: str) -> float:
+    """Keep acquisition assumptions distinct from the manuscript display bar."""
+    lengths = [calibration.scale_bar_length_um for calibration in calibrations]
+    if (not lengths or any(value is None or not np.isfinite(value) or value <= 0
+                           for value in lengths)
+            or not np.allclose(lengths, lengths[0], rtol=0, atol=1e-12)):
+        raise RuntimeError(f'{label} native scale-bar lengths must be finite, positive and consistent.')
+    return float(lengths[0])
+
+
 def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Path]:
     """Write reviewer-readable numerical provenance for every plotted result."""
 
@@ -596,19 +606,21 @@ def write_diagnostic_tables(context: PaperDiagnostics, outdir: Path) -> list[Pat
         for bound, scores in zip(context.search_bound_values, context.search_bound_scores):
             writer.writerow((float(bound), *scores.tolist()))
 
+    target_native_um = native_scale_bar_length(context.run.target_calibrations, 'Target')
+    reference_native_um = native_scale_bar_length(context.run.reference_calibrations, 'Reference')
     manifest = {
         "matching_mode": "automatic_independent_free_matching",
         "search_config": asdict(context.run.search_config),
         "calibration_role": "reporting and display only; not used in registration or ranking",
         "physical_scale_convention": {
-            "target_native_scale_bar_um": TARGET_DISPLAY_SCALE_BAR_UM,
-            "reference_native_scale_bar_um": 500.0,
+            "target_native_scale_bar_um": target_native_um,
+            "reference_native_scale_bar_um": reference_native_um,
             "manuscript_display_scale_bar_um": TARGET_DISPLAY_SCALE_BAR_UM,
             "reference_display_transform": (
-                "full-field isotropic resampling from the native 500-um reference "
+                f"full-field isotropic resampling from the native {reference_native_um:g}-um reference "
                 "calibration to target_01 analysis pixels per micrometre; the detected "
                 "native annotation is removed, candidates are placed on one common "
-                "physical canvas with edge-continuous background-only padding, and a 200-um display "
+                f"physical canvas with edge-continuous background-only padding, and a {TARGET_DISPLAY_SCALE_BAR_UM:g}-um display "
                 "annotation is added"
             ),
             "target_analysis_pixels_per_um": target_analysis_pixels_per_um(context),

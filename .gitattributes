@@ -1,0 +1,3 @@
+# Hash-protected inputs have canonical bytes independent of Git autocrlf.
+/paper_figures/figure_s14/source_data/** -text
+/paper_figures/figure_s14/source_data_manifest.json text eol=lf

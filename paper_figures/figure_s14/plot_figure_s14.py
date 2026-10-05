@@ -100,12 +100,22 @@ def validate_source_data() -> dict:
     """Fail before plotting if any committed source-data file is missing or changed."""
     manifest = json.loads(SOURCE_MANIFEST.read_text(encoding="utf-8"))
     failures: list[str] = []
+    names = [entry['path'] for entry in manifest['files']]
+    if len(names) != len(set(names)):
+        raise RuntimeError('Duplicate source-data manifest path')
+    actual = {path.relative_to(SCRIPT_DIR).as_posix()
+              for path in SOURCE_DATA.rglob('*') if path.is_file()}
+    if set(names) != actual:
+        raise RuntimeError(f'Source-data manifest coverage mismatch: '
+                           f'unlisted={sorted(actual-set(names))}, missing={sorted(set(names)-actual)}')
     for entry in manifest["files"]:
         path = SCRIPT_DIR / entry["path"]
         if not path.is_file():
             failures.append(f"missing: {entry['path']}")
             continue
         observed = sha256_file(path)
+        if path.stat().st_size != entry['bytes']:
+            failures.append(f"size mismatch: {entry['path']}")
         if observed != entry["sha256"]:
             failures.append(
                 f"SHA-256 mismatch: {entry['path']} (expected {entry['sha256']}, observed {observed})"
